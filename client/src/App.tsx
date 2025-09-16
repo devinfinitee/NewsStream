@@ -8,6 +8,8 @@ import Footer from "@/components/Footer";
 import HomePage from "@/pages/HomePage";
 import CategoryPage from "@/pages/CategoryPage";
 import ArticlePage from "@/pages/ArticlePage";
+import SearchPage from "@/pages/SearchPage";
+import AdminPage from "@/pages/AdminPage";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -16,6 +18,8 @@ function Router() {
       <Route path="/" component={HomePage} />
       <Route path="/category/:category" component={CategoryPage} />
       <Route path="/article/:slug" component={ArticlePage} />
+      <Route path="/search" component={SearchPage} />
+      <Route path="/admin" component={AdminPage} />
       <Route component={NotFound} />
     </Switch>
   );

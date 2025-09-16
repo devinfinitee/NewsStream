@@ -16,9 +16,8 @@ export default function Header() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to search results - we'll implement this in the next update
-      console.log("Search triggered:", searchQuery);
-      // TODO: Navigate to search results page
+      // Navigate to search results page
+      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
     }
   };
 
