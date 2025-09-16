@@ -173,6 +173,7 @@ export class MemStorage implements IStorage {
       const fullArticle: Article = {
         ...article,
         id,
+        publishedAt: article.publishedAt || now,
         createdAt: now,
         updatedAt: now,
       };
