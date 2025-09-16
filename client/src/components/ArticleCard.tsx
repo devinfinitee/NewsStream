@@ -1,7 +1,7 @@
 import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import type { Article } from "@shared/news-schema";
+import type { Article } from "@shared/schema";
 import articleImage1 from "@assets/generated_images/Corporate_building_article_image_8b8034ea.png";
 import articleImage2 from "@assets/generated_images/City_skyline_article_image_2c04a75a.png";
 

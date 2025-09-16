@@ -2,9 +2,10 @@ import { useEffect, useRef } from "react";
 import { useRoute } from "wouter";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useQuery } from "@tanstack/react-query";
 import ArticleCard from "@/components/ArticleCard";
 import CategorySidebar from "@/components/CategorySidebar";
-import { mockArticles, type Category } from "@shared/news-schema";
+import type { Article } from "@shared/schema";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -16,10 +17,12 @@ export default function CategoryPage() {
   const category = params?.category as string;
   const categoryTitle = category ? category.charAt(0).toUpperCase() + category.slice(1) : "";
 
-  // Filter articles by category
-  const filteredArticles = mockArticles.filter(
-    article => article.category.toLowerCase() === category?.toLowerCase()
-  );
+  // Fetch articles by category from API
+  const { data: articles = [], isLoading } = useQuery<Article[]>({
+    queryKey: ["/api/articles/category", category],
+    queryFn: () => fetch(`/api/articles/category/${category}`).then(res => res.json()),
+    enabled: !!category,
+  });
 
   useEffect(() => {
     // GSAP animations for page entrance
@@ -68,9 +71,19 @@ export default function CategoryPage() {
               {categoryTitle} News
             </h1>
             
-            {filteredArticles.length > 0 ? (
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-muted rounded-lg h-48 mb-4"></div>
+                    <div className="h-4 bg-muted rounded mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : articles.length > 0 ? (
               <div ref={articlesRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {filteredArticles.map((article) => (
+                {articles.map((article) => (
                   <ArticleCard 
                     key={article.id} 
                     article={article}

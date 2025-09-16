@@ -1,16 +1,22 @@
 import { useEffect, useRef } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useQuery } from "@tanstack/react-query";
 import HeroSection from "@/components/HeroSection";
 import ArticleCard from "@/components/ArticleCard";
 import CategorySidebar from "@/components/CategorySidebar";
-import { mockArticles } from "@shared/news-schema";
+import type { Article } from "@shared/schema";
 
 gsap.registerPlugin(ScrollTrigger);
 
 export default function HomePage() {
   const articlesRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Fetch articles from API
+  const { data: articles = [], isLoading } = useQuery<Article[]>({
+    queryKey: ["/api/articles"],
+  });
 
   useEffect(() => {
     // GSAP animations for article cards entrance
@@ -70,15 +76,27 @@ export default function HomePage() {
           {/* Recent News Section */}
           <div className="lg:col-span-3">
             <h2 className="text-2xl font-bold text-foreground mb-8">Recent News</h2>
-            <div ref={articlesRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              {mockArticles.map((article) => (
-                <ArticleCard 
-                  key={article.id} 
-                  article={article}
-                  className="article-card"
-                />
-              ))}
-            </div>
+            {isLoading ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="animate-pulse">
+                    <div className="bg-muted rounded-lg h-48 mb-4"></div>
+                    <div className="h-4 bg-muted rounded mb-2"></div>
+                    <div className="h-4 bg-muted rounded w-3/4"></div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div ref={articlesRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {articles.map((article) => (
+                  <ArticleCard 
+                    key={article.id} 
+                    article={article}
+                    className="article-card"
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Categories Sidebar */}

@@ -1,12 +1,13 @@
 import { useEffect, useRef } from "react";
 import { useRoute, Link } from "wouter";
 import { gsap } from "gsap";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import CategorySidebar from "@/components/CategorySidebar";
-import { mockArticles } from "@shared/news-schema";
+import type { Article } from "@shared/schema";
 import articleImage1 from "@assets/generated_images/Corporate_building_article_image_8b8034ea.png";
 import articleImage2 from "@assets/generated_images/City_skyline_article_image_2c04a75a.png";
 
@@ -23,7 +24,13 @@ export default function ArticlePage() {
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   const slug = params?.slug;
-  const article = mockArticles.find(a => a.slug === slug);
+  
+  // Fetch article by slug from API
+  const { data: article, isLoading, error } = useQuery<Article>({
+    queryKey: ["/api/articles", slug],
+    queryFn: () => fetch(`/api/articles/${slug}`).then(res => res.json()),
+    enabled: !!slug,
+  });
 
   useEffect(() => {
     // GSAP animations for page entrance
@@ -59,7 +66,37 @@ export default function ArticlePage() {
     }
   }, [slug]);
 
-  if (!match || !article) {
+  if (!match) return null;
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            <div className="lg:col-span-3">
+              <div className="animate-pulse">
+                <div className="h-8 bg-muted rounded mb-6 w-20"></div>
+                <div className="h-6 bg-muted rounded mb-4 w-16"></div>
+                <div className="h-12 bg-muted rounded mb-4"></div>
+                <div className="h-4 bg-muted rounded mb-2 w-48"></div>
+                <div className="h-64 bg-muted rounded mb-8"></div>
+                <div className="space-y-4">
+                  <div className="h-4 bg-muted rounded"></div>
+                  <div className="h-4 bg-muted rounded w-5/6"></div>
+                  <div className="h-4 bg-muted rounded w-4/5"></div>
+                </div>
+              </div>
+            </div>
+            <div className="lg:col-span-1">
+              <div className="animate-pulse h-64 bg-muted rounded"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !article) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Card className="p-8 text-center">

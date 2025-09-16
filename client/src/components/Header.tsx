@@ -3,6 +3,7 @@ import { Link, useLocation } from "wouter";
 import { Search, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useQuery } from "@tanstack/react-query";
 import type { Category } from "@shared/news-schema";
 
 const categories: Category[] = ["Politics", "Sports", "Tech", "Entertainment"];
@@ -14,8 +15,11 @@ export default function Header() {
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Search triggered:", searchQuery);
-    // TODO: Implement search functionality
+    if (searchQuery.trim()) {
+      // Navigate to search results - we'll implement this in the next update
+      console.log("Search triggered:", searchQuery);
+      // TODO: Navigate to search results page
+    }
   };
 
   return (
