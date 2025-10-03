@@ -3,4 +3,13 @@ dist
 .DS_Store
 server/public
 vite.config.ts.*
+.env
+.env.local
+.env.*.local
+client/.env
+client/.env.local
 *.tar.gz
+.dockerignore
+.replit
+.server
+.local

@@ -1,34 +1,47 @@
+import { useState, useRef, useEffect } from "react";
 import { Link } from "wouter";
+import { gsap } from "gsap";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import type { Article } from "@shared/schema";
-import articleImage1 from "@assets/generated_images/Corporate_building_article_image_8b8034ea.png";
-import articleImage2 from "@assets/generated_images/City_skyline_article_image_2c04a75a.png";
 
 interface ArticleCardProps {
-  article: Article;
+  article: Article & { link?: string };
   className?: string;
 }
 
-// TODO: Remove mock image mapping when real images are available
-const imageMap: Record<string, string> = {
-  "1": articleImage1,
-  "2": articleImage2,
-  "3": articleImage1,
-};
+// Default fallback image for broken images
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=600&fit=crop';
 
 export default function ArticleCard({ article, className = "" }: ArticleCardProps) {
-  const imageUrl = imageMap[article.id] || articleImage1;
+  const [imageError, setImageError] = useState(false);
+  const imageUrl = imageError ? DEFAULT_IMAGE : (article.imageUrl || DEFAULT_IMAGE);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (cardRef.current) {
+      cardRef.current.setAttribute('data-gsap', 'true');
+      gsap.fromTo(cardRef.current,
+        { opacity: 0, y: 20 },
+        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", delay: 0.1 }
+      );
+    }
+  }, []);
 
   return (
-    <Card className={`overflow-hidden hover-elevate ${className}`}>
-      <Link href={`/article/${article.slug}`} data-testid={`link-article-${article.id}`}>
+    <Link href={`/article/${article.slug}`} onClick={() => {
+      try { sessionStorage.setItem(`article:${article.slug}`, JSON.stringify(article)); } catch {}
+    }}>
+      <Card ref={cardRef} className={`overflow-hidden hover-elevate cursor-pointer transition-all duration-300 hover:shadow-xl ${className}`}>
+      <div data-testid={`link-article-${article.id}`}>
         {/* Article Image */}
-        <div className="aspect-video w-full overflow-hidden">
+        <div className="aspect-video w-full overflow-hidden bg-muted">
           <img
             src={imageUrl}
             alt={article.title}
             className="w-full h-full object-cover transition-transform hover:scale-105"
+            onError={() => setImageError(true)}
+            loading="lazy"
             data-testid={`img-article-${article.id}`}
           />
         </div>
@@ -40,15 +53,16 @@ export default function ArticleCard({ article, className = "" }: ArticleCardProp
           </h3>
           
           <Button 
-            variant="outline" 
             size="sm"
             className="text-sm"
             data-testid={`button-read-more-${article.id}`}
           >
             READ MORE
+            {/* icon removed for internal page navigation */}
           </Button>
         </div>
-      </Link>
+      </div>
     </Card>
+  </Link>
   );
 }

@@ -2,6 +2,47 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Smooth transitions for all interactive elements */
+* {
+  transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Disable transitions for GSAP-controlled elements to avoid conflicts */
+[data-gsap], .gsap-animated {
+  transition: none !important;
+}
+
+/* Mobile-first responsive utilities */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+}
+
+/* Smooth scroll behavior */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Animation keyframes */
+@keyframes slide-in-from-top {
+  from {
+    transform: translateY(-10px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.animate-in {
+  animation: slide-in-from-top 0.3s ease-out;
+}
+
 /* LIGHT MODE */
 :root {
   --button-outline: rgba(0,0,0, .10);

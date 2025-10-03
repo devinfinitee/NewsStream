@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import ArticleCard from "@/components/ArticleCard";
 import CategorySidebar from "@/components/CategorySidebar";
-import type { Article } from "@shared/schema";
+import { searchNews, convertToArticle } from "@/lib/newsApi";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -29,12 +29,15 @@ export default function SearchPage() {
     }
   }, []);
 
-  // Fetch search results from API
-  const { data: articles = [], isLoading } = useQuery<Article[]>({
-    queryKey: ["/api/articles/search", currentQuery],
-    queryFn: () => fetch(`/api/articles/search?q=${encodeURIComponent(currentQuery)}`).then(res => res.json()),
+  // Fetch search results from NewsData API
+  const { data: newsArticles = [], isLoading } = useQuery({
+    queryKey: ["search-news", currentQuery],
+    queryFn: () => searchNews(currentQuery),
     enabled: !!currentQuery,
+    staleTime: 5 * 60 * 1000, // 5 minutes
   });
+
+  const articles = newsArticles.map(convertToArticle);
 
   useEffect(() => {
     // GSAP animations for results
@@ -84,33 +87,32 @@ export default function SearchPage() {
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-12">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Search Results Section */}
-          <div className="lg:col-span-3">
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-foreground mb-6">
+          <div className="flex-1 min-w-0">
+            <div className="mb-6 md:mb-8">
+              <h1 className="text-2xl md:text-3xl font-bold text-foreground mb-4 md:mb-6">
                 {currentQuery ? `Search Results for "${currentQuery}"` : "Search Articles"}
               </h1>
               
               {/* Search Form */}
-              <form onSubmit={handleSearch} className="relative max-w-2xl">
+              <form onSubmit={handleSearch} className="flex items-center gap-0 max-w-2xl">
                 <Input
                   type="search"
                   placeholder="Search articles..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pr-12 text-lg h-12"
+                  className="flex-1 h-10 md:h-12 text-sm md:text-base rounded-r-none border-r-0"
                   data-testid="input-search-page"
                 />
                 <Button
                   type="submit"
-                  variant="ghost"
-                  size="icon"
-                  className="absolute right-1 top-1 h-10 w-10"
+                  size="sm"
+                  className="h-10 md:h-12 px-4 rounded-l-none"
                   data-testid="button-search-page"
                 >
-                  <Search className="h-5 w-5" />
+                  <Search className="h-4 w-4 md:h-5 md:w-5" />
                 </Button>
               </form>
             </div>
@@ -149,7 +151,7 @@ export default function SearchPage() {
           </div>
 
           {/* Categories Sidebar */}
-          <div ref={sidebarRef} className="lg:col-span-1">
+          <div ref={sidebarRef} className="w-full lg:w-80 lg:sticky lg:top-24 lg:h-fit">
             <CategorySidebar />
           </div>
         </div>

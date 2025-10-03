@@ -1,194 +1,134 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRoute, Link } from "wouter";
-import { gsap } from "gsap";
 import { useQuery } from "@tanstack/react-query";
+import { gsap } from "gsap";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import CategorySidebar from "@/components/CategorySidebar";
-import type { Article } from "@shared/schema";
-import articleImage1 from "@assets/generated_images/Corporate_building_article_image_8b8034ea.png";
-import articleImage2 from "@assets/generated_images/City_skyline_article_image_2c04a75a.png";
+import ArticleCard from "@/components/ArticleCard";
+import { fetchNewsByCategory } from "@/lib/newsApi";
 
-// TODO: Remove mock image mapping when real images are available
-const imageMap: Record<string, string> = {
-  "1": articleImage1,
-  "2": articleImage2,
-  "3": articleImage1,
-};
+// Default fallback image for broken images
+const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=800&h=600&fit=crop';
+
+// Lightweight sanitization helpers
+function stripHtml(input?: string | null) { return input ? input.replace(/<[^>]*>/g, '') : ''; }
+function decodeEntities(input?: string | null) {
+  if (!input) return '';
+  return input
+    .replace(/&nbsp;/g, ' ')
+    .replace(/&amp;/g, '&')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>');
+}
+function cleanText(input?: string | null) {
+  const noHtml = stripHtml(input);
+  const decoded = decodeEntities(noHtml);
+  return decoded.replace(/[\u0000-\u001F\u007F]+/g, '').replace(/\s+/g, ' ').trim();
+}
 
 export default function ArticlePage() {
   const [match, params] = useRoute("/article/:slug");
   const contentRef = useRef<HTMLDivElement>(null);
   const sidebarRef = useRef<HTMLDivElement>(null);
+  const [imageError, setImageError] = useState(false);
 
-  const slug = params?.slug;
-  
-  // Fetch article by slug from API
-  const { data: article, isLoading, error } = useQuery<Article>({
-    queryKey: ["/api/articles", slug],
-    queryFn: () => fetch(`/api/articles/${slug}`).then(res => res.json()),
-    enabled: !!slug,
+  const slug = params?.slug as string | undefined;
+
+  // Retrieve article from sessionStorage (set by ArticleCard)
+  const stored = useMemo(() => {
+    if (!slug) return null;
+    try { return JSON.parse(sessionStorage.getItem(`article:${slug}`) || 'null'); } catch { return null; }
+  }, [slug]);
+
+  const category = (stored?.category || 'general').toLowerCase();
+
+  const { data: related = [] } = useQuery({
+    queryKey: ['related', category],
+    queryFn: () => fetchNewsByCategory(category),
+    enabled: !!category,
+    staleTime: 5 * 60 * 1000,
   });
 
   useEffect(() => {
-    // GSAP animations for page entrance
     if (contentRef.current) {
-      gsap.fromTo(contentRef.current,
-        {
-          opacity: 0,
-          y: 30
-        },
-        {
-          opacity: 1,
-          y: 0,
-          duration: 0.8,
-          ease: "power2.out",
-        }
+      gsap.fromTo(contentRef.current, 
+        { opacity: 0, y: 40, scale: 0.98 }, 
+        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power2.out" }
       );
     }
-
     if (sidebarRef.current) {
-      gsap.fromTo(sidebarRef.current,
-        {
-          opacity: 0,
-          x: 20
-        },
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.8,
-          delay: 0.2,
-          ease: "power2.out",
-        }
+      gsap.fromTo(sidebarRef.current, 
+        { opacity: 0, x: 30 }, 
+        { opacity: 1, x: 0, duration: 0.8, delay: 0.2, ease: "power3.out" }
       );
     }
   }, [slug]);
 
   if (!match) return null;
 
-  if (isLoading) {
+  if (!stored) {
     return (
-      <div className="min-h-screen">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-            <div className="lg:col-span-3">
-              <div className="animate-pulse">
-                <div className="h-8 bg-muted rounded mb-6 w-20"></div>
-                <div className="h-6 bg-muted rounded mb-4 w-16"></div>
-                <div className="h-12 bg-muted rounded mb-4"></div>
-                <div className="h-4 bg-muted rounded mb-2 w-48"></div>
-                <div className="h-64 bg-muted rounded mb-8"></div>
-                <div className="space-y-4">
-                  <div className="h-4 bg-muted rounded"></div>
-                  <div className="h-4 bg-muted rounded w-5/6"></div>
-                  <div className="h-4 bg-muted rounded w-4/5"></div>
-                </div>
-              </div>
-            </div>
-            <div className="lg:col-span-1">
-              <div className="animate-pulse h-64 bg-muted rounded"></div>
-            </div>
-          </div>
-        </div>
+      <div className="max-w-5xl mx-auto px-4 py-10">
+        <Link href="/"><Button><ArrowLeft className="h-4 w-4 mr-2"/>Back to Home</Button></Link>
+        <Card className="mt-6 p-6">We couldn't load this article. Please return to the homepage and try again.</Card>
       </div>
     );
   }
 
-  if (error || !article) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <Card className="p-8 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Article Not Found</h1>
-          <p className="text-muted-foreground mb-6">
-            The article you're looking for doesn't exist or has been moved.
-          </p>
-          <Link href="/">
-            <Button>
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Back to Home
-            </Button>
-          </Link>
-        </Card>
-      </div>
-    );
-  }
-
-  const imageUrl = imageMap[article.id] || articleImage1;
+  const title = cleanText(stored.title);
+  const content = cleanText(stored.content || stored.excerpt);
+  const author = stored.author || 'Unknown';
+  const published = stored.publishedAt ? new Date(stored.publishedAt).toLocaleString() : '';
+  const hero = imageError ? DEFAULT_IMAGE : (stored.imageUrl || DEFAULT_IMAGE);
 
   return (
-    <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Article Content */}
-          <div ref={contentRef} className="lg:col-span-3">
-            {/* Back Button */}
-            <Link href="/">
-              <Button variant="ghost" className="mb-6" data-testid="button-back-home">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Back to Home
-              </Button>
-            </Link>
-
-            <article>
-              {/* Article Header */}
-              <header className="mb-8">
-                <Badge variant="secondary" className="mb-4" data-testid={`badge-category-${article.category}`}>
-                  {article.category}
-                </Badge>
-                <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight" data-testid="text-article-title">
-                  {article.title}
-                </h1>
-                <div className="flex items-center gap-6 text-muted-foreground text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="h-4 w-4" />
-                    <span data-testid="text-article-author">{article.author}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" />
-                    <span data-testid="text-article-date">
-                      {new Date(article.publishedAt).toLocaleDateString('en-US', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
-                    </span>
-                  </div>
-                </div>
-              </header>
-
-              {/* Article Image */}
-              <div className="mb-8">
-                <img
-                  src={imageUrl}
-                  alt={article.title}
-                  className="w-full h-64 md:h-96 object-cover rounded-lg"
-                  data-testid="img-article-main"
-                />
-              </div>
-
-              {/* Article Content */}
-              <div className="prose prose-lg max-w-none" data-testid="text-article-content">
-                <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                  {article.excerpt}
-                </p>
-                <div className="text-foreground leading-relaxed">
-                  {article.content.split('\n').map((paragraph, index) => (
-                    <p key={index} className="mb-4">
-                      {paragraph}
-                    </p>
-                  ))}
-                </div>
-              </div>
-            </article>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
+        <div className="flex-1 min-w-0" ref={contentRef}>
+          <Link href="/"><Button variant="outline" className="mb-4 text-sm"><ArrowLeft className="h-4 w-4 mr-2"/>Back to Home</Button></Link>
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-3">{title}</h1>
+          <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground mb-4">
+            <span className="inline-flex items-center gap-1"><User className="h-3 w-3 md:h-4 md:w-4"/>{author}</span>
+            <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3 md:h-4 md:w-4"/>{published}</span>
+            {stored.category && <Badge variant="secondary" className="capitalize text-xs">{stored.category}</Badge>}
           </div>
 
-          {/* Categories Sidebar */}
-          <div ref={sidebarRef} className="lg:col-span-1">
-            <CategorySidebar />
+          <div className="aspect-video w-full overflow-hidden rounded-lg bg-muted mb-4 md:mb-6">
+            <img src={hero} alt={title} className="w-full h-full object-cover" onError={() => setImageError(true)} />
+          </div>
+
+          <div className="prose prose-sm md:prose-base prose-neutral dark:prose-invert max-w-none leading-relaxed">
+            {content}
           </div>
         </div>
+
+        <aside className="w-full lg:w-80 lg:sticky lg:top-24 lg:h-fit" ref={sidebarRef}>
+          <Card className="p-4 mb-4">
+            <h3 className="font-semibold mb-2 text-sm md:text-base">Related in {category}</h3>
+            <div className="space-y-4">
+              {related.slice(0, 4).map((a) => (
+                <ArticleCard key={a.article_id} article={{
+                  id: a.article_id,
+                  title: a.title,
+                  content: a.content || a.description || '',
+                  excerpt: a.description || a.title,
+                  category: a.category?.[0] || 'General',
+                  author: a.source_name || 'Unknown',
+                  publishedAt: new Date(a.pubDate),
+                  imageUrl: a.image_url || DEFAULT_IMAGE,
+                  slug: a.article_id,
+                  link: a.link,
+                  createdAt: new Date(a.pubDate),
+                  updatedAt: new Date(a.pubDate),
+                }} className="article-card" />
+              ))}
+            </div>
+          </Card>
+        </aside>
       </div>
     </div>
   );

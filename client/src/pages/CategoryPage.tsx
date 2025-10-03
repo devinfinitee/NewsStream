@@ -5,7 +5,7 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useQuery } from "@tanstack/react-query";
 import ArticleCard from "@/components/ArticleCard";
 import CategorySidebar from "@/components/CategorySidebar";
-import type { Article } from "@shared/schema";
+import { fetchNewsByCategory, convertToArticle } from "@/lib/newsApi";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -15,29 +15,32 @@ export default function CategoryPage() {
   const sidebarRef = useRef<HTMLDivElement>(null);
 
   const category = params?.category as string;
-  const categoryTitle = category ? category.charAt(0).toUpperCase() + category.slice(1) : "";
-
-  // Fetch articles by category from API
-  const { data: articles = [], isLoading } = useQuery<Article[]>({
-    queryKey: ["/api/articles/category", category],
-    queryFn: () => fetch(`/api/articles/category/${category}`).then(res => res.json()),
-    enabled: !!category,
+  // Fetch articles by category from NewsData API
+  const { data: newsArticles = [], isLoading } = useQuery({
+    queryKey: ["category-news", category],
+    queryFn: () => fetchNewsByCategory(category),
+    staleTime: 5 * 60 * 1000,
+    refetchInterval: 5 * 60 * 1000,
   });
+
+  const articles = newsArticles.map(convertToArticle);
 
   useEffect(() => {
     // GSAP animations for page entrance
-    if (articlesRef.current) {
+    if (articlesRef.current && articles.length > 0) {
       const cards = articlesRef.current.querySelectorAll('.article-card');
       gsap.fromTo(cards,
         {
           opacity: 0,
-          y: 30
+          y: 30,
+          scale: 0.95
         },
         {
           opacity: 1,
           y: 0,
+          scale: 1,
           duration: 0.6,
-          stagger: 0.1,
+          stagger: 0.08,
           ease: "power2.out",
         }
       );
@@ -47,42 +50,45 @@ export default function CategoryPage() {
       gsap.fromTo(sidebarRef.current,
         {
           opacity: 0,
-          x: 20
+          x: 30
         },
         {
           opacity: 1,
           x: 0,
           duration: 0.8,
-          ease: "power2.out",
+          delay: 0.2,
+          ease: "power3.out",
         }
       );
     }
-  }, [category]);
+  }, [category, articles]);
 
   if (!match) return null;
 
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+      {/* Main Content with Fixed Sidebar */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+        <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Articles Section */}
-          <div className="lg:col-span-3">
-            <h1 className="text-3xl font-bold text-foreground mb-8" data-testid={`title-category-${category}`}>
-              {categoryTitle} News
-            </h1>
-            
+          <div className="flex-1 min-w-0">
+            <h2 className="text-xl md:text-2xl font-bold text-foreground mb-6 md:mb-8 capitalize">{category} News</h2>
             {isLoading ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {[...Array(4)].map((_, i) => (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
+                {[...Array(6)].map((_, i) => (
                   <div key={i} className="animate-pulse">
-                    <div className="bg-muted rounded-lg h-48 mb-4"></div>
+                    <div className="bg-muted rounded-lg h-40 md:h-48 mb-4"></div>
                     <div className="h-4 bg-muted rounded mb-2"></div>
                     <div className="h-4 bg-muted rounded w-3/4"></div>
                   </div>
                 ))}
               </div>
-            ) : articles.length > 0 ? (
-              <div ref={articlesRef} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            ) : articles.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No articles found in this category yet.</p>
+              </div>
+            ) : (
+              <div ref={articlesRef} className="grid grid-cols-1 sm:grid-cols-2 gap-4 md:gap-6">
                 {articles.map((article) => (
                   <ArticleCard 
                     key={article.id} 
@@ -91,17 +97,11 @@ export default function CategoryPage() {
                   />
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <p className="text-muted-foreground text-lg">
-                  No articles found in this category yet.
-                </p>
-              </div>
             )}
           </div>
 
-          {/* Categories Sidebar */}
-          <div ref={sidebarRef} className="lg:col-span-1">
+          {/* Fixed Categories Sidebar */}
+          <div ref={sidebarRef} className="w-full lg:w-80 lg:sticky lg:top-24 lg:h-fit">
             <CategorySidebar />
           </div>
         </div>

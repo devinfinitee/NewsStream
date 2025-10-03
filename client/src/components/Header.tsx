@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "wouter";
 import { Search, Menu, X } from "lucide-react";
+import { gsap } from "gsap";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useQuery } from "@tanstack/react-query";
@@ -12,17 +13,28 @@ export default function Header() {
   const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const headerRef = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (headerRef.current) {
+      gsap.fromTo(headerRef.current, 
+        { y: -100, opacity: 0 },
+        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
+      );
+    }
+  }, []);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      // Navigate to search results page
-      window.location.href = `/search?q=${encodeURIComponent(searchQuery.trim())}`;
+      // Navigate to search results page using wouter
+      window.history.pushState({}, '', `/search?q=${encodeURIComponent(searchQuery.trim())}`);
+      window.dispatchEvent(new PopStateEvent('popstate'));
     }
   };
 
   return (
-    <header className="bg-background border-b border-border sticky top-0 z-50">
+    <header ref={headerRef} className="bg-background border-b border-border sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
@@ -32,6 +44,15 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
+            <Link
+              href="/"
+              className={`text-sm font-medium transition-colors hover:text-primary ${
+                location === "/" ? "text-primary" : "text-muted-foreground"
+              }`}
+              data-testid="link-nav-home"
+            >
+              Home
+            </Link>
             {categories.map((category) => (
               <Link
                 key={category}
@@ -50,20 +71,19 @@ export default function Header() {
 
           {/* Search Bar */}
           <div className="hidden md:flex items-center">
-            <form onSubmit={handleSearch} className="relative">
+            <form onSubmit={handleSearch} className="flex items-center gap-0">
               <Input
                 type="search"
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-64 pr-10"
+                className="w-56 h-9 rounded-r-none border-r-0 text-sm focus:outline-none focus:ring-1 focus:ring-primary"
                 data-testid="input-search"
               />
               <Button
                 type="submit"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full"
+                size="sm"
+                className="h-9 px-3 rounded-l-none"
                 data-testid="button-search"
               >
                 <Search className="h-4 w-4" />
@@ -85,21 +105,20 @@ export default function Header() {
 
         {/* Mobile Menu */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 space-y-4">
-            <form onSubmit={handleSearch} className="relative">
+          <div className="md:hidden py-4 space-y-4 animate-in slide-in-from-top duration-300">
+            <form onSubmit={handleSearch} className="flex items-center gap-0">
               <Input
                 type="search"
                 placeholder="Search"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pr-10"
+                className="flex-1 h-10 rounded-r-none border-r-0 text-sm"
                 data-testid="input-search-mobile"
               />
               <Button
                 type="submit"
-                variant="ghost"
-                size="icon"
-                className="absolute right-0 top-0 h-full"
+                size="sm"
+                className="h-10 px-3 rounded-l-none"
                 data-testid="button-search-mobile"
               >
                 <Search className="h-4 w-4" />
