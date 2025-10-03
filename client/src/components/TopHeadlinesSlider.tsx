@@ -33,7 +33,14 @@ export default function TopHeadlinesSlider() {
     );
   }
 
-  if (slides.length === 0) return null;
+  // Show placeholder if no slides yet
+  if (slides.length === 0) {
+    return (
+      <div className="w-full h-56 sm:h-64 md:h-80 lg:h-96 rounded-lg bg-muted flex items-center justify-center">
+        <p className="text-muted-foreground">Loading headlines...</p>
+      </div>
+    );
+  }
 
   const current = slides[index];
   const onPrepare = () => {
@@ -41,7 +48,7 @@ export default function TopHeadlinesSlider() {
   };
 
   return (
-    <section className="relative mb-6 md:mb-10 overflow-hidden rounded-lg shadow-lg">
+    <section className="relative mb-6 md:mb-10 overflow-hidden rounded-lg shadow-lg" data-testid="headlines-slider">
       <Link href={`/article/${current.slug}`} onClick={onPrepare} className="block">
         <div className="relative w-full h-56 sm:h-64 md:h-80 lg:h-96 group">
           <img

@@ -24,50 +24,56 @@ export default function HomePage() {
   const articles = newsArticles.map(convertToArticle);
 
   useEffect(() => {
-    // GSAP animations for article cards entrance
-    if (articlesRef.current && articles.length > 0) {
-      const cards = articlesRef.current.querySelectorAll('.article-card');
-      gsap.fromTo(cards, 
-        {
-          opacity: 0,
-          y: 30,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.6,
-          stagger: 0.08,
-          ease: "power2.out",
-          scrollTrigger: {
-            trigger: articlesRef.current,
-            start: "top 85%",
-            toggleActions: "play none none reverse"
-          }
+    const timer = setTimeout(() => {
+      // GSAP animations for article cards entrance
+      if (articlesRef.current && articles.length > 0) {
+        const cards = articlesRef.current.querySelectorAll('.article-card');
+        if (cards.length > 0) {
+          gsap.fromTo(cards, 
+            {
+              opacity: 0,
+              y: 30,
+              scale: 0.95
+            },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.6,
+              stagger: 0.08,
+              ease: "power2.out",
+              scrollTrigger: {
+                trigger: articlesRef.current,
+                start: "top 85%",
+                toggleActions: "play none none reverse"
+              }
+            }
+          );
         }
-      );
-    }
+      }
 
-    // Sidebar animation
-    if (sidebarRef.current) {
-      gsap.fromTo(sidebarRef.current,
-        {
-          opacity: 0,
-          x: 30
-        },
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.8,
-          ease: "power3.out",
-          scrollTrigger: {
-            trigger: sidebarRef.current,
-            start: "top 85%",
+      // Sidebar animation
+      if (sidebarRef.current) {
+        gsap.fromTo(sidebarRef.current,
+          {
+            opacity: 0,
+            x: 30
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.8,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: sidebarRef.current,
+              start: "top 85%",
+            }
           }
-        }
-      );
-    }
+        );
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [articles]);
 
   return (

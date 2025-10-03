@@ -26,41 +26,47 @@ export default function CategoryPage() {
   const articles = newsArticles.map(convertToArticle);
 
   useEffect(() => {
-    // GSAP animations for page entrance
-    if (articlesRef.current && articles.length > 0) {
-      const cards = articlesRef.current.querySelectorAll('.article-card');
-      gsap.fromTo(cards,
-        {
-          opacity: 0,
-          y: 30,
-          scale: 0.95
-        },
-        {
-          opacity: 1,
-          y: 0,
-          scale: 1,
-          duration: 0.6,
-          stagger: 0.08,
-          ease: "power2.out",
+    const timer = setTimeout(() => {
+      // GSAP animations for page entrance
+      if (articlesRef.current && articles.length > 0) {
+        const cards = articlesRef.current.querySelectorAll('.article-card');
+        if (cards.length > 0) {
+          gsap.fromTo(cards,
+            {
+              opacity: 0,
+              y: 30,
+              scale: 0.95
+            },
+            {
+              opacity: 1,
+              y: 0,
+              scale: 1,
+              duration: 0.6,
+              stagger: 0.08,
+              ease: "power2.out",
+            }
+          );
         }
-      );
-    }
+      }
 
-    if (sidebarRef.current) {
-      gsap.fromTo(sidebarRef.current,
-        {
-          opacity: 0,
-          x: 30
-        },
-        {
-          opacity: 1,
-          x: 0,
-          duration: 0.8,
-          delay: 0.2,
-          ease: "power3.out",
-        }
-      );
-    }
+      if (sidebarRef.current) {
+        gsap.fromTo(sidebarRef.current,
+          {
+            opacity: 0,
+            x: 30
+          },
+          {
+            opacity: 1,
+            x: 0,
+            duration: 0.8,
+            delay: 0.2,
+            ease: "power3.out",
+          }
+        );
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [category, articles]);
 
   if (!match) return null;

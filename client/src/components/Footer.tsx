@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 export default function Footer() {
   return (
     <footer className="bg-card border-t border-border mt-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Info */}
           <div>
@@ -86,8 +86,8 @@ export default function Footer() {
         </div>
 
         {/* Copyright */}
-        <div className="border-t border-border mt-8 pt-8 text-center">
-          <p className="text-muted-foreground">
+        <div className="border-t border-border mt-6 pt-6 text-center">
+          <p className="text-muted-foreground text-sm">
             © 2024 Infinite News. All rights reserved.
           </p>
         </div>

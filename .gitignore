@@ -11,5 +11,6 @@ client/.env.local
 *.tar.gz
 .dockerignore
 .replit
-.server
+server
 .local
+setup-windows.bat

@@ -19,13 +19,16 @@ export default function ArticleCard({ article, className = "" }: ArticleCardProp
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    if (cardRef.current) {
-      cardRef.current.setAttribute('data-gsap', 'true');
-      gsap.fromTo(cardRef.current,
-        { opacity: 0, y: 20 },
-        { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", delay: 0.1 }
-      );
-    }
+    const timer = setTimeout(() => {
+      if (cardRef.current) {
+        cardRef.current.setAttribute('data-gsap', 'true');
+        gsap.fromTo(cardRef.current,
+          { opacity: 0, y: 20 },
+          { opacity: 1, y: 0, duration: 0.5, ease: "power2.out", delay: 0.1 }
+        );
+      }
+    }, 50);
+    return () => clearTimeout(timer);
   }, []);
 
   return (

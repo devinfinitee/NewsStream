@@ -54,18 +54,22 @@ export default function ArticlePage() {
   });
 
   useEffect(() => {
-    if (contentRef.current) {
-      gsap.fromTo(contentRef.current, 
-        { opacity: 0, y: 40, scale: 0.98 }, 
-        { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power2.out" }
-      );
-    }
-    if (sidebarRef.current) {
-      gsap.fromTo(sidebarRef.current, 
-        { opacity: 0, x: 30 }, 
-        { opacity: 1, x: 0, duration: 0.8, delay: 0.2, ease: "power3.out" }
-      );
-    }
+    const timer = setTimeout(() => {
+      if (contentRef.current) {
+        gsap.fromTo(contentRef.current, 
+          { opacity: 0, y: 40, scale: 0.98 }, 
+          { opacity: 1, y: 0, scale: 1, duration: 0.8, ease: "power2.out" }
+        );
+      }
+      if (sidebarRef.current) {
+        gsap.fromTo(sidebarRef.current, 
+          { opacity: 0, x: 30 }, 
+          { opacity: 1, x: 0, duration: 0.8, delay: 0.2, ease: "power3.out" }
+        );
+      }
+    }, 100);
+    
+    return () => clearTimeout(timer);
   }, [slug]);
 
   if (!match) return null;

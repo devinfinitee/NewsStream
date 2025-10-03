@@ -16,12 +16,16 @@ export default function Header() {
   const headerRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
-    if (headerRef.current) {
-      gsap.fromTo(headerRef.current, 
-        { y: -100, opacity: 0 },
-        { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
-      );
-    }
+    // Ensure animations run after mount in production
+    const timer = setTimeout(() => {
+      if (headerRef.current) {
+        gsap.fromTo(headerRef.current, 
+          { y: -100, opacity: 0 },
+          { y: 0, opacity: 1, duration: 0.6, ease: "power2.out" }
+        );
+      }
+    }, 100);
+    return () => clearTimeout(timer);
   }, []);
 
   const handleSearch = (e: React.FormEvent) => {
@@ -38,7 +42,7 @@ export default function Header() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <Link href="/" className="flex-shrink-0" data-testid="link-home">
+          <Link href="/" className="flex-shrink-0" onClick={() => window.scrollTo(0, 0)} data-testid="link-home">
             <h1 className="text-xl font-bold text-foreground">INFINITE NEWS</h1>
           </Link>
 
@@ -49,6 +53,7 @@ export default function Header() {
               className={`text-sm font-medium transition-colors hover:text-primary ${
                 location === "/" ? "text-primary" : "text-muted-foreground"
               }`}
+              onClick={() => window.scrollTo(0, 0)}
               data-testid="link-nav-home"
             >
               Home
@@ -62,6 +67,7 @@ export default function Header() {
                     ? "text-primary"
                     : "text-muted-foreground"
                 }`}
+                onClick={() => window.scrollTo(0, 0)}
                 data-testid={`link-category-${category.toLowerCase()}`}
               >
                 {category}
@@ -134,7 +140,7 @@ export default function Header() {
                       ? "text-primary"
                       : "text-muted-foreground"
                   }`}
-                  onClick={() => setIsMenuOpen(false)}
+                  onClick={() => { setIsMenuOpen(false); window.scrollTo(0, 0); }}
                   data-testid={`link-category-mobile-${category.toLowerCase()}`}
                 >
                   {category}
