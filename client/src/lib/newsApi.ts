@@ -68,44 +68,33 @@ function buildNewsDataUrl(params: Record<string, string | number | undefined>) {
       (window as any).__newsdata_key_warned = true;
     }
   }
+  
   return `${BASE_URL}?${usp.toString()}`;
 }
 
 // Fetch top headlines. Prefer NewsAPI if key is provided (richer headlines endpoint).
 export async function fetchTopHeadlines(country: string = 'us'): Promise<NewsArticle[]> {
   try {
-    if (NEWSAPI_KEY) {
-      const url = `${NEWSAPI_BASE}/top-headlines?country=${country}&pageSize=10&apiKey=${NEWSAPI_KEY}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`Top headlines error: ${res.statusText}`);
-      const data = await res.json();
-      // Map NewsAPI articles into our NewsArticle shape (partial mapping)
-      const mapped: NewsArticle[] = (data.articles || []).map((a: any, idx: number) => ({
-        article_id: a.url || String(idx),
-        title: a.title,
-        description: a.description ?? a.title,
-        content: a.content ?? a.description ?? a.title,
-        link: a.url,
-        image_url: a.urlToImage ?? null,
-        pubDate: a.publishedAt ?? new Date().toISOString(),
-        source_id: a.source?.id ?? 'newsapi',
-        source_name: a.source?.name ?? 'NewsAPI',
-        category: ['general'],
-        country: [country],
-        language: 'en',
-      }));
-      return filterValidArticles(mapped);
+    // Always use NewsData for headlines to avoid CORS issues in production
+    const url = buildNewsDataUrl({ country: 'us' });
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      console.warn('NewsData headlines failed, using fallback');
+      return [];
     }
-    // Fallback: use NewsData latest as banner if NewsAPI key is not present
-    return await fetchLatestNews();
+    
+    const data: NewsDataResponse = await response.json();
+    return filterValidArticles(data.results || []);
   } catch (e) {
     console.error('Error fetching top headlines:', e);
+    // Return empty array instead of throwing to prevent UI breaking
     return [];
   }
 }
 
 // Fetch latest news articles (no page param as requested)
-export async function fetchLatestNews(): Promise<NewsArticle[]> {
+{{ ... }}
   try {
     // Required format: https://newsdata.io/api/1/news?language=en&country=us&apikey=...
     const url = buildNewsDataUrl({ country: 'us' });

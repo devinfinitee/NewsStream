@@ -6,11 +6,18 @@ import { Link } from "wouter";
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1600&h=800&fit=crop';
 
 export default function TopHeadlinesSlider() {
-  const { data: headlines = [], isLoading } = useQuery({
+  const { data: headlines = [], isLoading, error } = useQuery({
     queryKey: ["top-headlines"],
     queryFn: () => fetchTopHeadlines("us"),
     staleTime: 5 * 60 * 1000,
+    retry: 2,
+    retryDelay: 1000,
   });
+  
+  // Log errors for debugging
+  if (error) {
+    console.error('TopHeadlines query error:', error);
+  }
 
   const slides = useMemo(() => headlines.map(convertToArticle), [headlines]);
   const [index, setIndex] = useState(0);
