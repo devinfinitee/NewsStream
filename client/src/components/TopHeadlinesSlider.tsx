@@ -68,20 +68,21 @@ export default function TopHeadlinesSlider() {
 
   return (
     <section className="relative mb-6 md:mb-10 overflow-hidden rounded-lg shadow-lg" data-testid="headlines-slider">
-      <Link href={`/article/${current.slug}`} onClick={onPrepare} className="block">
+      <Link href={`/article/${current.slug}`} onClick={() => { onPrepare(); window.scrollTo(0, 0); }} className="block">
         <div className="relative w-full h-56 sm:h-64 md:h-80 lg:h-96 group">
           <img
+            key={current.slug}
             src={current.imageUrl || DEFAULT_IMAGE}
             onError={(e) => { (e.currentTarget as HTMLImageElement).src = DEFAULT_IMAGE; }}
             alt={current.title}
-            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+            className="w-full h-full object-cover transition-all duration-1000 ease-in-out group-hover:scale-110 animate-fade-in"
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
-          <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-6">
-            <h2 className="text-white text-base sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 line-clamp-2 transition-all duration-300 group-hover:text-primary-foreground">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent transition-opacity duration-500" />
+          <div className="absolute bottom-0 left-0 right-0 p-3 sm:p-4 md:p-6 animate-slide-up">
+            <h2 className="text-white text-base sm:text-xl md:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 line-clamp-2 transition-all duration-500 group-hover:text-primary-foreground">
               {current.title}
             </h2>
-            <p className="hidden sm:block text-white/90 text-sm md:text-base line-clamp-2 mb-2 md:mb-3 max-w-3xl">{current.excerpt}</p>
+            <p className="hidden sm:block text-white/90 text-sm md:text-base line-clamp-2 mb-2 md:mb-3 max-w-3xl transition-opacity duration-500">{current.excerpt}</p>
           </div>
         </div>
       </Link>

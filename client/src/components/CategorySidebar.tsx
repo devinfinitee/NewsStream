@@ -18,11 +18,12 @@ export default function CategorySidebar() {
           return (
             <Link
               key={category}
-              href={href}
-              className={`block py-3 px-2 text-sm font-medium transition-colors rounded-md hover-elevate ${
-                isActive
+              href={`/category/${category.toLowerCase()}`}
+              onClick={() => window.scrollTo(0, 0)}
+              className={`block py-3 px-4 rounded-lg transition-all ${
+                location === `/category/${category.toLowerCase()}`
                   ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:text-foreground"
+                  : "hover:bg-muted"
               }`}
               data-testid={`link-sidebar-${category.toLowerCase()}`}
             >

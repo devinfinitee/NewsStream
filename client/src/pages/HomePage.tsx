@@ -77,9 +77,9 @@ export default function HomePage() {
   }, [articles]);
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen animate-fade-in">
       {/* Top Headlines Banner Slider */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 md:pt-6 animate-slide-up">
         <TopHeadlinesSlider />
       </div>
 

@@ -34,8 +34,9 @@ export default function ArticleCard({ article, className = "" }: ArticleCardProp
   return (
     <Link href={`/article/${article.slug}`} onClick={() => {
       try { sessionStorage.setItem(`article:${article.slug}`, JSON.stringify(article)); } catch {}
+      window.scrollTo(0, 0);
     }}>
-      <Card ref={cardRef} className={`overflow-hidden hover-elevate cursor-pointer transition-all duration-300 hover:shadow-xl ${className}`}>
+      <Card ref={cardRef} className={`overflow-hidden hover-elevate cursor-pointer transition-all duration-300 hover:shadow-xl hover:scale-105 animate-scale-in ${className}`}>
       <div data-testid={`link-article-${article.id}`}>
         {/* Article Image */}
         <div className="aspect-video w-full overflow-hidden bg-muted">

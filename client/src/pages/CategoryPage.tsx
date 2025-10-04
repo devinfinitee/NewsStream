@@ -72,9 +72,9 @@ export default function CategoryPage() {
   if (!match) return null;
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen animate-fade-in">
       {/* Main Content with Fixed Sidebar */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8 animate-slide-up">
         <div className="flex flex-col lg:flex-row gap-6 lg:gap-8">
           {/* Articles Section */}
           <div className="flex-1 min-w-0">
