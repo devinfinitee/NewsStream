@@ -27,7 +27,10 @@ function decodeEntities(input?: string | null) {
 function cleanText(input?: string | null) {
   const noHtml = stripHtml(input);
   const decoded = decodeEntities(noHtml);
-  return decoded.replace(/[\u0000-\u001F\u007F]+/g, '').replace(/\s+/g, ' ').trim();
+  // Remove bracketed notes like [ ... ] and paid-plan banners
+  const noBrackets = decoded.replace(/\[[^\]]*\]/g, '');
+  const noPaidBanner = noBrackets.replace(/only available in paid plans/gi, '');
+  return noPaidBanner.replace(/[\u0000-\u001F\u007F]+/g, '').replace(/\s+/g, ' ').trim();
 }
 
 export default function ArticlePage() {
@@ -84,10 +87,20 @@ export default function ArticlePage() {
   }
 
   const title = cleanText(stored.title);
-  const content = cleanText(stored.content || stored.excerpt);
-  const author = stored.author || 'Unknown';
+  const excerpt = cleanText(stored.excerpt || stored.description || '');
+  const content = cleanText(stored.content || stored.excerpt || stored.description || '');
+  // We won't display author by request, but keep for internal logic if needed
+  const author = stored.author || stored.source_name || '';
   const published = stored.publishedAt ? new Date(stored.publishedAt).toLocaleString() : '';
   const hero = imageError ? DEFAULT_IMAGE : (stored.imageUrl || DEFAULT_IMAGE);
+  
+  // Build full article text with multiple paragraphs for better reading
+  const fullArticleText = [
+    excerpt,
+    content,
+    // Add some context if content is too short
+    content.length < 200 ? `This article was published by ${author}. For the complete story and latest updates, visit the original source.` : ''
+  ].filter(Boolean).join('\n\n');
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
@@ -96,7 +109,6 @@ export default function ArticlePage() {
           <Link href="/"><Button variant="outline" className="mb-4 text-sm"><ArrowLeft className="h-4 w-4 mr-2"/>Back to Home</Button></Link>
           <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-foreground mb-3">{title}</h1>
           <div className="flex flex-wrap items-center gap-2 md:gap-3 text-xs md:text-sm text-muted-foreground mb-4">
-            <span className="inline-flex items-center gap-1"><User className="h-3 w-3 md:h-4 md:w-4"/>{author}</span>
             <span className="inline-flex items-center gap-1"><Calendar className="h-3 w-3 md:h-4 md:w-4"/>{published}</span>
             {stored.category && <Badge variant="secondary" className="capitalize text-xs">{stored.category}</Badge>}
           </div>
@@ -106,7 +118,24 @@ export default function ArticlePage() {
           </div>
 
           <div className="prose prose-sm md:prose-base prose-neutral dark:prose-invert max-w-none leading-relaxed">
-            {content}
+            {fullArticleText.split('\n\n').map((paragraph, idx) => (
+              <p key={idx} className="mb-4 text-base leading-7">
+                {paragraph}
+              </p>
+            ))}
+            
+            {stored.link && (
+              <div className="mt-8">
+                <a
+                  href={stored.link}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center px-4 py-2 rounded-md bg-primary text-primary-foreground hover:opacity-90"
+                >
+                  READ MORE
+                </a>
+              </div>
+            )}
           </div>
         </div>
 

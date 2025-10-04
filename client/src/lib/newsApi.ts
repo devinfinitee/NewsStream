@@ -75,13 +75,20 @@ function buildNewsDataUrl(params: Record<string, string | number | undefined>) {
 // Fetch top headlines. Prefer NewsAPI if key is provided (richer headlines endpoint).
 export async function fetchTopHeadlines(country: string = 'us'): Promise<NewsArticle[]> {
   try {
-    // Always use NewsData for headlines to avoid CORS issues in production
-    const url = buildNewsDataUrl({ country: 'us' });
+    // Use 'top' category to avoid "paid plans" error on free tier
+    const url = buildNewsDataUrl({ category: 'top', country: 'us' });
     const response = await fetch(url);
     
     if (!response.ok) {
-      console.warn('NewsData headlines failed, using fallback');
-      return [];
+      console.warn('NewsData headlines failed, trying without country');
+      // Fallback without country
+      const fallbackUrl = buildNewsDataUrl({ category: 'top' });
+      const fallbackResponse = await fetch(fallbackUrl);
+      if (!fallbackResponse.ok) {
+        return [];
+      }
+      const fallbackData: NewsDataResponse = await fallbackResponse.json();
+      return filterValidArticles(fallbackData.results || []);
     }
     
     const data: NewsDataResponse = await response.json();
@@ -94,18 +101,27 @@ export async function fetchTopHeadlines(country: string = 'us'): Promise<NewsArt
 }
 
 // Fetch latest news articles (no page param as requested)
-{{ ... }}
+export async function fetchLatestNews(): Promise<NewsArticle[]> {
   try {
-    // Required format: https://newsdata.io/api/1/news?language=en&country=us&apikey=...
-    const url = buildNewsDataUrl({ country: 'us' });
+    // NewsData free plan requires category or domain, not just country
+    // Use 'top' category for general news to avoid "paid plans" error
+    const url = buildNewsDataUrl({ category: 'top', country: 'us' });
     const response = await fetch(url);
     
     if (!response.ok) {
-      throw new Error(`Failed to fetch news: ${response.statusText}`);
+      console.warn(`Failed to fetch latest news: ${response.statusText}`);
+      // Try without country as fallback
+      const fallbackUrl = buildNewsDataUrl({ category: 'top' });
+      const fallbackResponse = await fetch(fallbackUrl);
+      if (!fallbackResponse.ok) {
+        throw new Error(`Failed to fetch news: ${fallbackResponse.statusText}`);
+      }
+      const fallbackData: NewsDataResponse = await fallbackResponse.json();
+      return filterValidArticles(fallbackData.results || []);
     }
     
     const data: NewsDataResponse = await response.json();
-    return filterValidArticles(data.results);
+    return filterValidArticles(data.results || []);
   } catch (error) {
     console.error('Error fetching latest news:', error);
     return [];

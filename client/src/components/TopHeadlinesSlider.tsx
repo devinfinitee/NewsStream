@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { fetchTopHeadlines, convertToArticle } from "@/lib/newsApi";
+import { fetchTopHeadlines, fetchLatestNews, convertToArticle } from "@/lib/newsApi";
 import { Link } from "wouter";
 
 const DEFAULT_IMAGE = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?w=1600&h=800&fit=crop';
 
 export default function TopHeadlinesSlider() {
-  const { data: headlines = [], isLoading, error } = useQuery({
+  // Fetch top headlines
+  const { data: headlines = [], isLoading: headlinesLoading, error: headlinesError } = useQuery({
     queryKey: ["top-headlines"],
     queryFn: () => fetchTopHeadlines("us"),
     staleTime: 5 * 60 * 1000,
@@ -14,12 +15,23 @@ export default function TopHeadlinesSlider() {
     retryDelay: 1000,
   });
   
+  // Fetch general news as fallback
+  const { data: generalNews = [], isLoading: generalLoading } = useQuery({
+    queryKey: ["latest-news-slider"],
+    queryFn: () => fetchLatestNews(),
+    staleTime: 5 * 60 * 1000,
+    enabled: headlines.length === 0 && !headlinesLoading,
+  });
+  
   // Log errors for debugging
-  if (error) {
-    console.error('TopHeadlines query error:', error);
+  if (headlinesError) {
+    console.error('TopHeadlines query error:', headlinesError);
   }
 
-  const slides = useMemo(() => headlines.map(convertToArticle), [headlines]);
+  // Use headlines if available, otherwise use general news
+  const newsArticles = headlines.length > 0 ? headlines : generalNews;
+  const slides = useMemo(() => newsArticles.map(convertToArticle), [newsArticles]);
+  const isLoading = headlinesLoading || generalLoading;
   const [index, setIndex] = useState(0);
   const timerRef = useRef<number | null>(null);
 
